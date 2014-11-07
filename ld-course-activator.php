@@ -9,112 +9,10 @@ Author URI: http://www.kanso.ca
 Description: This plugin is meant to be a link between the WooCommerce Software Addon and LearnDash LMS. LearnDash already has WooCommerce integration, but only when WooCommerce and LearnDash exist on the same WP install. This may not always be desirable or even possible.
 */
 
-// Scripts
-add_action( "wp_enqueue_scripts", 'ldca_scripts' );
-  
-function ldca_scripts() {
-  wp_register_style( "font-awesome", "//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css", false, "4.2.0" );
-  wp_enqueue_style( "font-awesome" );
-}
-
-
 /**
- * Add a meta box to courses for adding/editing the product ID from WooCommerce
+ * Init plugin
  */
-
-// Add meta box
-add_action('add_meta_boxes', 'ldca_product_id_meta_add');
-
-function ldca_product_id_meta_add() {
-  add_meta_box('ldca-product-id', 'Product ID', 'ldca_product_id_meta_cb', 'sfwd-courses', 'normal', 'high');
-}
-
-// Meta box innards
-function ldca_product_id_meta_cb($post) {
-  // delete_post_meta($post->ID, 'ldca_product_id_text');
-  $post_custom = get_post_custom($post->ID);
-  $product_id = isset($post_custom['ldca_product_id']) ? sanitize_text_field($post_custom['ldca_product_id'][0]) : '';
-  
-  // Generate nonce for verification
-  wp_nonce_field('ldca_product_id_nonce', 'ldca_product_id_nonce_val');
-  
-  // Text field HTML
-  ?><input type="text" name="ldca_product_id" id="ldca-product-id-text" value="<?php echo $product_id; ?>"><?php
-}
-
-// Save meta data
-add_action('save_post', 'ldca_product_id_meta_save');
-
-function ldca_product_id_meta_save($post_id) {
-  // Bail if we're doing an auto save
-  if(defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
-   
-  // If our nonce isn't there, or we can't verify it, bail
-  if(!isset($_POST['ldca_product_id_nonce_val']) || !wp_verify_nonce($_POST['ldca_product_id_nonce_val'], 'ldca_product_id_nonce')) return;
-   
-  // If our current user can't edit this post, bail
-  if(!current_user_can('edit_post')) return;
-  
-  if(isset($_POST['ldca_product_id'])) {
-    $product_id = sanitize_text_field($_POST['ldca_product_id']);
-    update_post_meta($post_id, 'ldca_product_id', $product_id);
-  }
-}
-
-
-
-// Creates a simple shortcode for inserting the activation form. All form validation and activation is set up through this shortcode as well.
-
-add_shortcode('ldca_activation_form', 'ldca_activation_form_cb');
-
-function ldca_activation_form_cb($atts) {
-  $a = shortcode_atts( array(
-    'store_url' => ''
-  ), $atts );
-  
-  if (empty($a['store_url'])) return;
-  
-  $data = array(
-    'store_url' => $a['store_url'],
-    'product_id' => '',
-    'licence_email' => '',
-    'licence_key' => ''
-  );
-  
-  ldca_init($data);
-  
-  ob_start();
-  
-  ?>
-  <form class="course-activation-form" method="post">
-    <label>
-      <span class="label-text"><span class="fa fa-key left"></span> Product ID</span>
-      <input type="text" name="product_id" value="<?php echo $data['product_id']; ?>">
-    </label>
-    
-    <label>
-      <span class="label-text"><span class="fa fa-envelope-o left"></span> Licence Email</span>
-      <input type="email" name="licence_email" value="<?php echo $data['licence_email']; ?>">
-    </label>
-    
-    <label>
-      <span class="label-text"><span class="fa fa-key left"></span> Licence Key</span>
-      <input type="text" name="licence_key" value="<?php echo $data['licence_key']; ?>">
-    </label>
-    
-    <p>
-      <button type="submit">
-        <span class="fa fa-bolt left"></span> Activate
-      </button>
-    </p>
-  </form>
-  <?php
-    
-  return ob_get_clean();
-}
-
-
-
+add_action( "wp_enqueue_scripts", 'ldca_scripts' );
 /**
   * Initiates the form validation, product activation and course access
   * 
@@ -132,13 +30,14 @@ function ldca_init(&$data) {
           if (ldca_give_access($data)) {
             ldca_display_message('Course activated successfully!', 'success');
             
-            unset($_POST);
+            wp_redirect($_SERVER['PHP_SELF']);
           }
         }
       }
     }
   }
 }
+add_action('init', 'ldca_init');
 
 
 
@@ -405,5 +304,120 @@ function ldca_request($store_url, $request_key, $product_id, $licence_email, $li
   
   return wp_remote_get($url);
 }
+
+
+
+// Scripts
+  
+function ldca_scripts() {
+  wp_register_style( "font-awesome", "//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css", false, "4.2.0" );
+  wp_enqueue_style( "font-awesome" );
+}
+
+
+/**
+ * Add a meta box to courses for adding/editing the product ID from WooCommerce
+ */
+
+// Add meta box
+add_action('add_meta_boxes', 'ldca_meta_add');
+
+function ldca_meta_add() {
+  add_meta_box('ldca-product-id', 'Product ID', 'ldca_meta_cb', 'sfwd-courses', 'normal', 'high');
+}
+
+// Meta box innards
+function ldca_meta_cb($post) {
+  // delete_post_meta($post->ID, 'ldca_product_id_text');
+  $post_custom = get_post_custom($post->ID);
+  $product_id = isset($post_custom['ldca_product_id']) ? sanitize_text_field($post_custom['ldca_product_id'][0]) : '';
+  
+  // Generate nonce for verification
+  wp_nonce_field('ldca_product_id_nonce', 'ldca_product_id_nonce_val');
+  
+  // Text field HTML
+  ?><input type="text" name="ldca_product_id" id="ldca-product-id-text" value="<?php echo $product_id; ?>"><?php
+}
+
+// Save meta data
+add_action('save_post', 'ldca_meta_save');
+
+function ldca_meta_save($post_id) {
+  // Bail if we're doing an auto save
+  if(defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+   
+  // If our nonce isn't there, or we can't verify it, bail
+  if(!isset($_POST['ldca_product_id_nonce_val']) || !wp_verify_nonce($_POST['ldca_product_id_nonce_val'], 'ldca_product_id_nonce')) return;
+   
+  // If our current user can't edit this post, bail
+  if(!current_user_can('edit_post')) return;
+  
+  if(isset($_POST['ldca_product_id'])) {
+    $product_id = sanitize_text_field($_POST['ldca_product_id']);
+    update_post_meta($post_id, 'ldca_product_id', $product_id);
+  }
+}
+
+
+
+// Creates a simple shortcode for inserting the activation form. All form validation and activation is set up through this shortcode as well.
+
+add_shortcode('ldca_activation_form', 'ldca_activation_form_cb');
+
+function ldca_activation_form_cb($atts) {
+  $a = shortcode_atts( array(
+    'store_url' => ''
+  ), $atts );
+  
+  if (empty($a['store_url'])) return;
+  
+  $data = array(
+    'store_url' => $a['store_url'],
+    'product_id' => '',
+    'licence_email' => '',
+    'licence_key' => ''
+  );
+  
+  ldca_init($data);
+  
+  ldca_display_message($data['message']);
+  
+  ob_start();
+  
+  ?>
+  <form class="course-activation-form" method="post">
+    <label>
+      <span class="label-text"><span class="fa fa-key left"></span> Product ID</span>
+      <input type="text" name="product_id" value="<?php echo $data['product_id']; ?>">
+    </label>
+    
+    <label>
+      <span class="label-text"><span class="fa fa-envelope-o left"></span> Licence Email</span>
+      <input type="email" name="licence_email" value="<?php echo $data['licence_email']; ?>">
+    </label>
+    
+    <label>
+      <span class="label-text"><span class="fa fa-key left"></span> Licence Key</span>
+      <input type="text" name="licence_key" value="<?php echo $data['licence_key']; ?>">
+    </label>
+    
+    <p>
+      <button type="submit">
+        <span class="fa fa-bolt left"></span> Activate
+      </button>
+    </p>
+  </form>
+  <?php
+    
+  return ob_get_clean();
+}
+
+
+
+
+
+
+
+  
 
 ?>
