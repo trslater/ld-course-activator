@@ -9,8 +9,20 @@ Author URI: http://www.kanso.ca
 Description: This plugin is meant to be a link between the WooCommerce Software Addon and LearnDash LMS. LearnDash already has WooCommerce integration, but only when WooCommerce and LearnDash exist on the same WP install. This may not always be desirable or even possible.
 */
 
+// Scripts
+add_action( "wp_enqueue_scripts", 'ldca_scripts' );
+  
+function ldca_scripts() {
+  wp_register_style( "font-awesome", "//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css", false, "4.2.0" );
+  wp_enqueue_style( "font-awesome" );
+}
 
 
+/**
+ * Add a meta box to courses for adding/editing the product ID from WooCommerce
+ */
+
+// Add meta box
 add_action('add_meta_boxes', 'ldca_product_id_meta_add');
 
 function ldca_product_id_meta_add() {
@@ -55,8 +67,19 @@ function ldca_product_id_meta_save($post_id) {
 
 add_shortcode('ldca_activation_form', 'ldca_activation_form_cb');
 
-function ldca_activation_form_cb() {
-  $data = array();
+function ldca_activation_form_cb($atts) {
+  $a = shortcode_atts( array(
+    'store_url' => ''
+  ), $atts );
+  
+  if (empty($a['store_url'])) return;
+  
+  $data = array(
+    'store_url' => $a['store_url'],
+    'product_id' => '',
+    'licence_email' => '',
+    'licence_key' => ''
+  );
   
   ldca_init($data);
   
@@ -104,17 +127,17 @@ function ldca_init(&$data) {
   // Get all available form data
   if (ldca_form_ok($data)) {
     if (ldca_course_exists($data)) {
-      // if (!ldca_user_has_access($data)) {
-      //   if (ldca_activate($data)) {
-      //     if (ldca_give_access($data)) {
-      //       ldca_display_message('<p>Course activated successfully!</p>');
-      //     }
-      //   }
-      // }
+      if (ldca_not_user_has_access($data)) {
+        if (ldca_activate($data)) {
+          if (ldca_give_access($data)) {
+            ldca_display_message('Course activated successfully!', 'success');
+            
+            unset($_POST);
+          }
+        }
+      }
     }
   }
-  
-  // ldca_display_message($data['message']);
 }
 
 
@@ -198,7 +221,7 @@ function ldca_form_ok(&$data) {
 
 
 /**
-  * Checks to see if the form was filled out correctly
+  * Looks for a course with the entered product ID
   * 
   * @param   array        $data   contains data about the form, course & product
   * @return  true|false
@@ -210,25 +233,39 @@ function ldca_course_exists(&$data) {
     return false;
   }
   
-  $product_id = $data['product_id'];
-  
-  // Get any courses with 
+  // Get courses with product ID
   $courses = get_posts(array(
     'post_type' => 'sfwd-courses',
     'meta_query' => array(
       array(
         'key' => 'ldca_product_id',
-        'value' => $product_id,
+        'value' => $data['product_id'],
         'compare' => '='
       )
     )
   ));
   
-  if (count($courses) > 0) {
-    $course_custom = get_post_custom($courses[0]->ID);
-    $course_access = $course_custom['_sfwd-courses'][0];
+  // Cache number of courses returned
+  $courses_count = count($courses);
+  
+  // If found at least one course
+  if ($courses_count >= 1) {
     
-    print_r($course_access);
+    // If there is exactly one course
+    if ($courses_count == 1) {
+      $data['course'] = $courses[0];
+      return true;
+      
+    // If there is more than one...someone messed up :(
+    } else {
+      ldca_display_message('Error #384. Please contact the vendor of the course.', 'error');
+      return false;
+    }
+  
+  // If none were found
+  } else {
+    ldca_display_message('A course with that Product ID was not found.', 'error');
+    return false;
   }
 }
 
@@ -240,14 +277,34 @@ function ldca_course_exists(&$data) {
   * @param   array        $data   contains data about the form, course & product
   * @return  true|false
   */
-function ldca_user_has_access(&$data) {
+function ldca_not_user_has_access(&$data) {
   if (!is_array($data)) {
     ldca_display_message('An unknown error has occurred', 'error');
     
     return false;
   }
   
+  // Grab course data
+  $course_data = get_post_meta($data['course']->ID, '_sfwd-courses', true);
   
+  // Grab and arrayize access list
+  $course_access_list = preg_split('/\s*,\s*/', $course_data['sfwd-courses_course_access_list']);
+
+  // Grab current user id
+  $current_user_id = get_current_user_id();
+  
+  // If user doesn't yet have access to course
+  if (! in_array($current_user_id, $course_access_list)) {
+    
+    // Then continue...
+    $data['current_user_id'] = $current_user_id;
+    return true;
+    
+  // If they do already have access to course
+  } else {
+    ldca_display_message('You already have access to this course.', 'error');
+    return false;
+  }
 }
 
 
@@ -264,6 +321,22 @@ function ldca_activate(&$data) {
     
     return false;
   }
+  
+  $response = ldca_request($data['store_url'], 'activation', $data['product_id'], $data['licence_email'], $data['licence_key']);
+  
+  // If response came back fine
+  if (! empty($response['body'])) {
+    
+    // Get activated status
+    $activation_successful = json_decode($response['body'], true)['activated'];
+    
+    if ($activation_successful) {
+      return true;
+    } else {
+      ldca_display_message('Activation failed.');
+      return false;
+    }
+  }
 }
 
 
@@ -277,6 +350,29 @@ function ldca_give_access(&$data) {
   if (!is_array($data)) {
     ldca_display_message('An unknown error has occurred', 'error');
     
+    return false;
+  }
+  
+  // Grab course custom fields
+  $course_data = get_post_meta($data['course']->ID, '_sfwd-courses', true);
+  
+  // Grab and arrayize access list
+  $course_access_list = preg_split('/\s*,\s*/', $course_data['sfwd-courses_course_access_list']);
+  
+  // Add current user
+  $course_access_list[] = $data['current_user_id'];
+  
+  // Add access list back to course data
+  $course_data['sfwd-courses_course_access_list'] = implode(', ', $course_access_list);
+  
+  // Try to write new data back to course
+  if (update_post_meta($data['course']->ID, '_sfwd-courses', $course_data)) {
+    
+    // If successful, continue...
+    return true;
+    
+  } else {
+    ldca_display_message('Unable to give access.', 'error');
     return false;
   }
 }
@@ -304,14 +400,10 @@ function ldca_display_message($content, $type = '') {
  * @param  string $licence_key
  * @return null
  */
-function ldca_request($request_key, $product_id, $licence_email, $licence_key) {
-    
-  // Build URL
-  $url = "http://clients.kanso.ca/sites/woo/?wc-api=software-api&request=$request_key&email=$licence_email&licence_key=$licence_key&product_id=$product_id";
-
-  $data = wp_remote_get($activation_url);
+function ldca_request($store_url, $request_key, $product_id, $licence_email, $licence_key) {
+  $url = "$store_url?wc-api=software-api&request=$request_key&email=$licence_email&licence_key=$licence_key&product_id=$product_id";
   
-  print_r($data);
+  return wp_remote_get($url);
 }
 
 ?>
