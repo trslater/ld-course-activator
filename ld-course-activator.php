@@ -11,17 +11,6 @@ Description: This plugin is meant to be a link between the WooCommerce Software 
 
 
 
-//                                     ,,                                                  
-// `7MM"""Mq.                        `7MM                      mm       `7MMF'`7MM"""Yb.   
-//   MM   `MM.                         MM                      MM         MM    MM    `Yb. 
-//   MM   ,M9 `7Mb,od8 ,pW"Wq.    ,M""bMM `7MM  `7MM  ,p6"bo mmMMmm       MM    MM     `Mb 
-//   MMmmdM9    MM' "'6W'   `Wb ,AP    MM   MM    MM 6M'  OO   MM         MM    MM      MM 
-//   MM         MM    8M     M8 8MI    MM   MM    MM 8M        MM         MM    MM     ,MP 
-//   MM         MM    YA.   ,A9 `Mb    MM   MM    MM YM.    ,  MM         MM    MM    ,dP' 
-// .JMML.     .JMML.   `Ybmd9'   `Wbmd"MML. `Mbod"YML.YMbmd'   `Mbmo    .JMML..JMMmmmdP'   
-
-
-
 add_action('add_meta_boxes', 'ldca_product_id_meta_add');
 
 function ldca_product_id_meta_add() {
@@ -59,17 +48,6 @@ function ldca_product_id_meta_save($post_id) {
     update_post_meta($post_id, 'ldca_product_id', $product_id);
   }
 }
-
-
-
-//             ,,                                                        ,,          
-//  .M"""bgd `7MM                          mm                          `7MM          
-// ,MI    "Y   MM                          MM                            MM          
-// `MMb.       MMpMMMb.  ,pW"Wq.`7Mb,od8 mmMMmm ,p6"bo   ,pW"Wq.    ,M""bMM  .gP"Ya  
-//   `YMMNq.   MM    MM 6W'   `Wb MM' "'   MM  6M'  OO  6W'   `Wb ,AP    MM ,M'   Yb 
-// .     `MM   MM    MM 8M     M8 MM       MM  8M       8M     M8 8MI    MM 8M"""""" 
-// Mb     dM   MM    MM YA.   ,A9 MM       MM  YM.    , YA.   ,A9 `Mb    MM YM.    , 
-// P"Ybmmd"  .JMML  JMML.`Ybmd9'.JMML.     `MbmoYMbmd'   `Ybmd9'   `Wbmd"MML.`Mbmmd' 
 
 
 
@@ -111,17 +89,6 @@ function ldca_activation_form_cb() {
     
   return ob_get_clean();
 }
-
-
-
-//                                                  ,,                             
-// `7MM"""YMM                                mm     db                             
-//   MM    `7                                MM                                    
-//   MM   d `7MM  `7MM  `7MMpMMMb.  ,p6"bo mmMMmm `7MM  ,pW"Wq.`7MMpMMMb.  ,pP"Ybd 
-//   MM""MM   MM    MM    MM    MM 6M'  OO   MM     MM 6W'   `Wb MM    MM  8I   `" 
-//   MM   Y   MM    MM    MM    MM 8M        MM     MM 8M     M8 MM    MM  `YMMMa. 
-//   MM       MM    MM    MM    MM YM.    ,  MM     MM YA.   ,A9 MM    MM  L.   I8 
-// .JMML.     `Mbod"YML..JMML  JMML.YMbmd'   `Mbmo.JMML.`Ybmd9'.JMML  JMML.M9mmmP' 
 
 
 
