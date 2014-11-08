@@ -13,10 +13,10 @@ Description: This plugin is meant to be a link between the WooCommerce Software 
 /**
  * Include needed files
  */
-require_once './ldca-functions.php';
-require_once './ldca-meta.php';
-require_once './ldca-settings.php';
-require_once './ldca-shortcode.php';
+require_once 'ldca-functions.php';
+require_once 'ldca-meta.php';
+require_once 'ldca-settings.php';
+require_once 'ldca-shortcode.php';
 
 
 

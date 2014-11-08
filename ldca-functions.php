@@ -29,7 +29,7 @@ function ldca_form_ok(&$data) {
   if (! empty($product_id)) {
     $product_id = sanitize_text_field($product_id);
   } else {
-    $form_errors->add('no_product_id', '&lsquo;Product ID&rsquo; was not filled in');
+    // $form_errors->add('no_product_id', '&lsquo;Product ID&rsquo; was not filled in');
   }
   
   // Validate Licence Email
@@ -68,7 +68,7 @@ function ldca_form_ok(&$data) {
     $error_content .= '</ul>';
     
     // Show errors
-    ldca_display_message($error_content, 'error');
+    //ldca_display_message($error_content, 'error');
     
     return false;
     
@@ -88,7 +88,7 @@ function ldca_form_ok(&$data) {
   */
 function ldca_course_exists(&$data) {
   if (!is_array($data)) {
-    ldca_display_message('An unknown error has occurred', 'error');
+    //ldca_display_message('An unknown error has occurred', 'error');
     
     return false;
   }
@@ -118,13 +118,13 @@ function ldca_course_exists(&$data) {
       
     // If there is more than one...someone messed up :(
     } else {
-      ldca_display_message('Error #384. Please contact the vendor of the course.', 'error');
+      //ldca_display_message('Error #384. Please contact the vendor of the course.', 'error');
       return false;
     }
   
   // If none were found
   } else {
-    ldca_display_message('A course with that Product ID was not found.', 'error');
+    //ldca_display_message('A course with that Product ID was not found.', 'error');
     return false;
   }
 }
@@ -139,7 +139,7 @@ function ldca_course_exists(&$data) {
   */
 function ldca_not_user_has_access(&$data) {
   if (!is_array($data)) {
-    ldca_display_message('An unknown error has occurred', 'error');
+    //ldca_display_message('An unknown error has occurred', 'error');
     
     return false;
   }
@@ -162,7 +162,7 @@ function ldca_not_user_has_access(&$data) {
     
   // If they do already have access to course
   } else {
-    ldca_display_message('You already have access to this course.', 'error');
+    //ldca_display_message('You already have access to this course.', 'error');
     return false;
   }
 }
@@ -177,7 +177,7 @@ function ldca_not_user_has_access(&$data) {
   */
 function ldca_activate(&$data) {
   if (!is_array($data)) {
-    ldca_display_message('An unknown error has occurred', 'error');
+    //ldca_display_message('An unknown error has occurred', 'error');
     
     return false;
   }
@@ -193,7 +193,7 @@ function ldca_activate(&$data) {
     if ($activation_successful) {
       return true;
     } else {
-      ldca_display_message('Activation failed.');
+      //ldca_display_message('Activation failed.');
       return false;
     }
   }
@@ -208,7 +208,7 @@ function ldca_activate(&$data) {
  */
 function ldca_give_access(&$data) {
   if (!is_array($data)) {
-    ldca_display_message('An unknown error has occurred', 'error');
+    //ldca_display_message('An unknown error has occurred', 'error');
     
     return false;
   }
@@ -232,7 +232,7 @@ function ldca_give_access(&$data) {
     return true;
     
   } else {
-    ldca_display_message('Unable to give access.', 'error');
+    //ldca_display_message('Unable to give access.', 'error');
     return false;
   }
 }
