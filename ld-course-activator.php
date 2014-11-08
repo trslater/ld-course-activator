@@ -13,10 +13,10 @@ Description: This plugin is meant to be a link between the WooCommerce Software 
 /**
  * Include needed files
  */
-require_once 'ldca-functions.php';
-require_once 'ldca-meta.php';
-require_once 'ldca-settings.php';
-require_once 'ldca-shortcode.php';
+require_once 'functions.php';
+require_once 'meta.php';
+require_once 'settings.php';
+require_once 'shortcode.php';
 
 
 
@@ -27,29 +27,51 @@ require_once 'ldca-shortcode.php';
  * @return  true|false
  */
 function ldca_init() {
+  global $ldca_success, $ldca_form_message;
   
-  // Before doing anything, check for form submission
-  if (isset($_POST)) {
-    global $ldca_complete;
+  // Form is considered incomplete by default
+  $ldca_success = false;
+  
+  // Make sure form is posted to itself only
+  
+  // If no referer, no form, so quit
+  if (!isset($_SERVER['HTTP_REFERER'])) return;
+  
+  // Grab referer and request URI's
+  $referer = $_SERVER['HTTP_REFERER'];
+  $request = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+  
+  // Compare
+  if ($referer == $request) {
     
-    $ldca_complete = false;  
-    $data = array(
-      'form_errors' => new WP_Error()
-    );
+    echo 'linked to by self<br>';
     
-    // Get all available form data
-    if (ldca_form_ok($data)) {
-      if (ldca_course_exists($data)) {
-        if (ldca_not_user_has_access($data)) {
-          if (ldca_activate($data)) {
-            if (ldca_give_access($data)) {
-              $ldca_complete = true;
-              // ldca_display_message('Course activated successfully!', 'success');
+    // Check if 
+    if (isset($_POST['submit'])) {
+      echo 'form post data received<br>';
+      
+      // Init data object and create WP error object
+      $data = array(
+        'form_errors' => new WP_Error()
+      );
+      
+      // Get all available form data
+      if (ldca_form_ok($data)) {
+        if (ldca_course_exists($data)) {
+          if (ldca_not_user_has_access($data)) {
+            if (ldca_activate($data)) {
+              if (ldca_give_access($data)) {
+                $ldca_success = true;
+              }
             }
           }
         }
       }
+    } else {
+      echo 'no form data<br>';
     }
+  } else {
+    echo 'posted from unknown form<br>';
   }
 }
 add_action('init', 'ldca_init');
@@ -57,18 +79,22 @@ add_action('init', 'ldca_init');
   
  
 /**
- * Checks for completed form
+ * Checks for completed form and forwards back to itself to prevent form resubmission on refresh
  * 
  * @return null
  */
 function ldca_end_form() {
-  global $ldca_complete;
+  global $ldca_success;
   
   // If form complete
-  if ($ldca_complete) {
+  if ($ldca_success) {
+    echo 'complete<br>';
+    
+    // Clear post data
+    $_POST = array();
     
     // Redirect to self to avoid repost data on refresh
-    header('Location: ' . $_SERVER['PHP_SELF']);
+    wp_redirect($_SERVER['PHP_SELF']);
   }
 }
 add_action('send_headers', 'ldca_end_form');
@@ -77,6 +103,7 @@ add_action('send_headers', 'ldca_end_form');
 
 /**
  * Registers all scripts and styles for the plugin
+ * 
  * @return null
  */
 function ldca_scripts() {

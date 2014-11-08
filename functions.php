@@ -7,75 +7,110 @@
 
 
 /**
-  * Checks to see if the form was filled out correctly
+  * Validator!
   * 
   * @param   array        $data   contains data about the form, course and product
   * @return  true|false
   */
 function ldca_form_ok(&$data) {
-  if (! is_array($data)) {
+  
+  // Assume failure
+  $success = false;
+  
+  // Make sure data is being passed in
+  if (is_array($data)) {
+    global $ldca_form_message;
     
-  }
-  
-  $form_errors = array();
-  
-  // Get post data
-  $product_id = isset($_POST['product_id']) ? $_POST['product_id'] : '';
-  $licence_email = isset($_POST['licence_email']) ? $_POST['licence_email'] : '';
-  $licence_key = isset($_POST['licence_key']) ? $_POST['licence_key'] : '';
+    // Get post data
+    $product_id = isset($_POST['product_id']) ? $_POST['product_id'] : '';
+    $licence_email = isset($_POST['licence_email']) ? $_POST['licence_email'] : '';
+    $licence_key = isset($_POST['licence_key']) ? $_POST['licence_key'] : '';
+    
+    // Cache error object
+    $form_errors = $data['form_errors'];
 
-  // Validate Product ID
-  // If not left blank
-  if (! empty($product_id)) {
-    $product_id = sanitize_text_field($product_id);
-  } else {
-    // $form_errors->add('no_product_id', '&lsquo;Product ID&rsquo; was not filled in');
-  }
-  
-  // Validate Licence Email
-  if (! empty($licence_email)) {
-    $licence_email = sanitize_email($licence_email);
+    // Validate Product ID
     
-    if (!is_email($licence_email)) {
-      $form_errors[] = '&lsquo;Licence Email&rsquo; does not appear to be a valid email address';
+    // If not left blank
+    if (empty($product_id)) {
+      
+      // Generate error
+      $form_errors->add('no_product_id', '&lsquo;Product ID&rsquo; was not filled in');
+      
+    } else {
+      
+      // Sanitize
+      $product_id = sanitize_text_field($product_id);
     }
-  } else {
-    $form_errors[] = '&lsquo;Licence Email&rsquo; was not filled in';
-  }
-  
-  // Validate Product ID
-  if (! empty($licence_key)) {
-    $licence_key = sanitize_text_field($licence_key);
-  } else {
-    $form_errors[] = '&lsquo;Licence Key&rsquo; was not filled in';
-  }
-  
-  $data['form_errors'] = $form_errors;
-  $data['product_id'] = $product_id;
-  $data['licence_email'] = $licence_email;
-  $data['licence_key'] = $licence_key;
-  
-  // If errors were generated
-  if (! empty($data['form_errors'])) {
     
-    // Build message
-    $error_content  = '<p>Please make sure you have filled out all fields correctly.</p>';
-    $error_content .= '<p>Please correct the following errors:</p>';
-    $error_content .= '<ul>';
-    foreach ($data['form_errors'] as $error) {
-      $error_content .= '<li>' . $error . '</li>';
+    // Validate Licence Email
+    
+    // If left blank
+    if (empty($licence_email)) {
+      
+      // Generate error
+      $form_errors->add('no_licence_email', '&lsquo;Licence Email&rsquo; was not filled in');
+      
+    } else {
+      
+      // Sanitize
+      $licence_email = sanitize_email($licence_email);
+      
+      // If not a proper email address
+      if (! is_email($licence_email)) {
+        $form_errors->add('invalid_licence_email', '&lsquo;Licence Email&rsquo; does not appear to be a valid email address');
+      }
     }
-    $error_content .= '</ul>';
     
-    // Show errors
-    //ldca_display_message($error_content, 'error');
+    // Validate Product ID
     
-    return false;
+    // If left blank
+    if (empty($licence_key)) {
+      
+      // Generate error
+      $form_errors->add('no_product_id', '&lsquo;Licence Key&rsquo; was not filled in');
+      
+    } else {
+      // Sanitize
+      $licence_key = sanitize_text_field($licence_key);
+    }
     
-  // If no errors were found
-  } else {
-    return true;
+    // Check for errors
+    
+    // Cache messages
+    $error_messages = $form_errors->get_error_messages();
+    
+    // If errors were generated
+    if (count($error_messages) >= 1) {
+      
+      // Build message
+      $message_content  = '<p>Please make sure you have filled out all fields correctly.</p>';
+      $message_content .= '<p>Please correct the following errors:</p>';
+      $message_content .= '<ul>';
+      foreach ($error_messages as $message) {
+        $message_content .= '<li>' . $message . '</li>';
+      }
+      $message_content .= '</ul>';
+      
+      // Add to global message variable
+      $ldca_form_message = array(
+        'type' => 'error',
+        'content' => $message_content
+      );
+      
+    // If no errors were found
+    } else {
+      $success = true;
+    }
+    
+    // Add everything back to data
+    $data['product_id'] = $product_id;
+    $data['licence_email'] = $licence_email;
+    $data['licence_key'] = $licence_key;
+    $data['form_errors'] = $form_errors;
   }
+  
+  return $success;
 }
 
 

@@ -23,6 +23,12 @@ function ldca_settings_init() {
     'store_url',
     'esc_url_raw'
   );
+  
+  register_setting(
+    'ldca_settings_general',
+    'store_url',
+    'esc_url_raw'
+  );
 }
 add_action('admin_init','ldca_settings_init');
 
