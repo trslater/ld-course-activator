@@ -256,6 +256,7 @@ function ldca_activate(&$data) {
     if (! $store_url) {
       
       // Generate error
+      $form_errors->add('store_url_not_set', 'There was an internal error. Please contact the store administrator.');
       
     } else {
       
@@ -271,7 +272,7 @@ function ldca_activate(&$data) {
         if ($activation_successful) {
           return true;
         } else {
-          //ldca_display_message('Activation failed.');
+          $form_errors->add('activation_failed', 'Activation failed.');
           return false;
         }
       }
