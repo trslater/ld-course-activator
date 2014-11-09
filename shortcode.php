@@ -13,13 +13,7 @@ function ldca_activation_form_cb() {
   
   // Check for message 
   
-  // Check for success message in URI first
-  if (! empty(get_query_var('message_content'))) {
-    $ldca_form_message = array(
-      'content' => get_query_var('message_content'),
-      'type' => get_query_var('message_type')
-    );
-  }
+  // Check for global message var first
   if (isset($ldca_form_message['content'])) {
     
     // Prep optional type property
@@ -29,7 +23,19 @@ function ldca_activation_form_cb() {
     ?><div class="ldca-message<?php echo $message_type; ?>">
       <?php echo $ldca_form_message['content']; ?>
     </div><?php
+    
+  // If not message is found in global var
+  } else {
+    
+    // Check query vars
+    if (! empty(get_query_var('message_content'))) {
+      $ldca_form_message = array(
+        'content' => get_query_var('message_content'),
+        'type' => get_query_var('message_type')
+      );
+    }
   }
+  
   
   // Form output
   ?>
