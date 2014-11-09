@@ -57,7 +57,7 @@ function ldca_init() {
       'form_errors' => new WP_Error()
     );
     
-    // Get all available form data
+    // Run through the checks...
     if (ldca_form_ok($data)) {
       if (ldca_course_exists($data)) {
         if (ldca_not_user_has_access($data)) {
