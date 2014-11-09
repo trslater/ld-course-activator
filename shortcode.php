@@ -14,30 +14,44 @@ function ldca_activation_form_cb() {
   // Check for message 
   
   // Check for global message var first
+    
+  // If no message is found
+  if (! isset($ldca_form_message['content'])) {
+    
+    // Check query vars
+    
+    // If message found in query var
+    if (! empty(get_query_var('message_content'))) {
+      
+      // Create global message var and add content
+      $ldca_form_message = array(
+        'content' => get_query_var('message_content')
+      );
+      
+      // If optional type var is found
+      if (! empty(get_query_var('message_type'))) {
+        
+        // Add it to global var as well
+        $ldca_form_message['type'] = get_query_var('message_type');
+      } 
+    }
+  }
+  
+  // Check again
+  
+  // If found
   if (isset($ldca_form_message['content'])) {
     
     // Prep optional type property
     $message_type = isset($ldca_form_message['type']) ? ' ' . $ldca_form_message['type'] : '';
-    
-    // Message output
+      
+    // Add message HTML to buffer
     ?><div class="ldca-message<?php echo $message_type; ?>">
       <?php echo $ldca_form_message['content']; ?>
     </div><?php
-    
-  // If not message is found in global var
-  } else {
-    
-    // Check query vars
-    if (! empty(get_query_var('message_content'))) {
-      $ldca_form_message = array(
-        'content' => get_query_var('message_content'),
-        'type' => get_query_var('message_type')
-      );
-    }
   }
   
-  
-  // Form output
+  // Add form HTML to buffer
   ?>
   
   <form class="course-activation-form" method="post">
