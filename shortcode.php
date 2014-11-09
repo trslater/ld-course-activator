@@ -56,17 +56,17 @@ function ldca_activation_form_cb() {
   
   <form class="course-activation-form" method="post">
     <label>
-      <span class="label-text"><span class="fa fa-key left"></span> Product ID</span>
+      <span class="label-text"><span class="fa fa-key left"></span> Product ID <span class="required">*</span></span>
       <input type="text" name="product_id" value="<?php echo isset($_POST['product_id']) ? esc_attr($_POST['product_id']) : ''; ?>">
     </label>
     
     <label>
-      <span class="label-text"><span class="fa fa-envelope-o left"></span> Licence Email</span>
+      <span class="label-text"><span class="fa fa-envelope-o left"></span> Licence Email <span class="required">*</span></span>
       <input type="email" name="licence_email" value="<?php echo isset($_POST['licence_email']) ? esc_attr($_POST['licence_email']) : ''; ?>">
     </label>
     
     <label>
-      <span class="label-text"><span class="fa fa-key left"></span> Licence Key</span>
+      <span class="label-text"><span class="fa fa-key left"></span> Licence Key <span class="required">*</span></span>
       <input type="text" name="licence_key" value="<?php echo isset($_POST['licence_key']) ? esc_attr($_POST['licence_key']) : ''; ?>">
     </label>
     
