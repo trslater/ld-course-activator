@@ -1,8 +1,8 @@
 <?php 
 
-
-
 /**
+ * Course Meta
+ * 
  * This file adds a meta box to courses for adding/editing the product ID from WooCommerce, and handles saving the meta data
  */
 

@@ -1,6 +1,12 @@
 <?php
 
 /**
+ * Plugin Settings
+ * 
+ * This file adds a settings page to wp-admin and adds a field for setting the URL of the WooCommerce store on which you want to activate keys
+ */
+
+/**
  * Create the options page under 'Settings' in wp-admin
  * 
  * @return null

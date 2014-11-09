@@ -41,37 +41,72 @@ function ldca_init() {
   $referer = $_SERVER['HTTP_REFERER'];
   $request = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
   
-  // Compare
-  if ($referer == $request) {
+  // Compare and check post for submit
+  if ($referer == $request && isset($_POST['ldca_submit'])) {
     
-    echo 'linked to by self<br>';
+    // Check nonce
+    if ( 
+        ! isset($_POST['ldca_activation_wpnonce']) ||
+        ! wp_verify_nonce($_POST['ldca_activation_wpnonce'], 'ldca_activation')
+    ) {
+       return;
+    }
     
-    // Check if 
-    if (isset($_POST['submit'])) {
-      echo 'form post data received<br>';
-      
-      // Init data object and create WP error object
-      $data = array(
-        'form_errors' => new WP_Error()
-      );
-      
-      // Get all available form data
-      if (ldca_form_ok($data)) {
-        if (ldca_course_exists($data)) {
-          if (ldca_not_user_has_access($data)) {
-            if (ldca_activate($data)) {
-              if (ldca_give_access($data)) {
-                $ldca_success = true;
-              }
+    // Init data object and create WP error object
+    $data = array(
+      'form_errors' => new WP_Error()
+    );
+    
+    // Get all available form data
+    if (ldca_form_ok($data)) {
+      if (ldca_course_exists($data)) {
+        if (ldca_not_user_has_access($data)) {
+          if (ldca_activate($data)) {
+            if (ldca_give_access($data)) {
+              $ldca_success = true;
             }
           }
         }
       }
-    } else {
-      echo 'no form data<br>';
     }
-  } else {
-    echo 'posted from unknown form<br>';
+    
+    // After processing, produce message
+    
+    // Cache error messages
+    $error_messages = $data['form_errors']->get_error_messages();
+    
+    // If there are any error messages
+    if (count($error_messages) > 0) {
+      
+      $ldca_form_message = array(
+        'type' => 'error'
+      );
+      
+      // If there is only error message
+      if (count($error_messages) == 1) {
+        
+        // Produce simple message
+        $ldca_form_message['content'] = '<p>' . $error_messages[0] . '</p>';
+        
+      } else {
+        
+        // Build complex message
+        $ldca_form_message['content'] = '<p>The following errors have occurred:</p><ul>';
+        foreach ($error_messages as $error_message) {
+          $ldca_form_message['content'] .= '<li>' . $error_message . '</li>';
+        }
+        $ldca_form_message['content'] .= '</ul>';
+      }
+      
+    // If there are no errors, check for form success
+    } else if ($ldca_success) {
+      
+      // Generate success message
+      $ldca_form_message = array(
+        'content' => '<p>Course activated successfully!</p>',
+        'type' => 'success'
+      );
+    }      
   }
 }
 add_action('init', 'ldca_init');
@@ -88,13 +123,38 @@ function ldca_end_form() {
   
   // If form complete
   if ($ldca_success) {
-    echo 'complete<br>';
     
     // Clear post data
     $_POST = array();
     
+    // Create success message
+    $message_content = urlencode('<p>Course activtion successful!</p>');
+    
     // Redirect to self to avoid repost data on refresh
-    wp_redirect($_SERVER['PHP_SELF']);
+    
+    // Get URI of current page
+    $request  = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    
+    // Check if URI already has a query
+    
+    // If it does
+    if (strpos($request, '?')) {
+      
+      // Add an ampersand
+      $request .= '&';
+      
+    // If it doesn't
+    } else {
+      
+      // Add a question mark
+      $request .= '?';
+    }
+    
+    // Add query vars
+    $request .= 'message_content=' . $message_content . '&message_type=success';
+    
+    wp_redirect($request);
+    exit;
   }
 }
 add_action('send_headers', 'ldca_end_form');
@@ -111,7 +171,5 @@ function ldca_scripts() {
   wp_enqueue_style("font-awesome");
 }
 add_action("wp_enqueue_scripts", 'ldca_scripts');
-
-  
 
 ?>
