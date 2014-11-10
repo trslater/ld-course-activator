@@ -1,7 +1,6 @@
 <?php
 /*
 Plugin Name: LearnDash Course Activator
-Description: This plugin lists terms for a taxonomy for a post.
 Version: 1.0.0
 Author: Kanso Design
 Author URI: http://www.kanso.ca
