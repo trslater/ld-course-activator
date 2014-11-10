@@ -28,14 +28,17 @@ function ldca_activation_form_cb() {
       
       // Create global message var and add content
       $ldca['form_message'] = array(
-        'content' => get_query_var('message_content')
+        'content' => $message_content
       );
       
+      // Cache message content
+      $message_type = get_query_var('message_type'); 
+      
       // If optional type var is found
-      if (! empty(get_query_var('message_type'))) {
+      if (! empty($message_type)) {
         
         // Add it to global var as well
-        $ldca['form_message']['type'] = get_query_var('message_type');
+        $ldca['form_message']['type'] = $message_type;
       } 
     }
   }
