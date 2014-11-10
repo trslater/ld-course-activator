@@ -258,7 +258,8 @@ function ldca_activate() {
       if (isset($response['response']['code']) && $response['response']['code'] == '200') {
         
         // Get activated status
-        $activation_successful = json_decode($response['body'], true)['activated'];
+        $activation_successful = json_decode($response['body'], true);
+        $activation_successful = $activation_successful['activated'];
         
         if ($activation_successful) {
           return true;
