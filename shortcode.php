@@ -20,8 +20,11 @@ function ldca_activation_form_cb() {
     
     // Check query vars
     
+    // Cache message content
+    $message_content = get_query_var('message_content'); 
+    
     // If message found in query var
-    if (! empty(get_query_var('message_content'))) {
+    if (! empty($message_content)) {
       
       // Create global message var and add content
       $ldca['form_message'] = array(
