@@ -51,23 +51,47 @@ function ldca_activation_form_cb() {
     </div><?php
   }
   
+  // If error object was generated
+  if (isset($ldca['form_errors'])) {
+    
+    // Chache
+    $form_errors = $ldca['form_errors'];
+    
+  // If not (form not submitted)
+  } else {
+    
+    // Make error object just so error classes prep properly
+    $form_errors = new WP_Error();
+  }
+  
+  
+  // Prep field error classes
+  $product_id_error_class = $form_errors->get_error_message('no_product_id') !== '' ? ' class="error"' : '';
+  $licence_email_error_class = $form_errors->get_error_message('no_licence_email') !== '' || $form_errors->get_error_message('invalid_licence_email') !== '' ? ' class="error"' : '';
+  $licence_key_error_class = $form_errors->get_error_message('no_licence_key') !== '' ? ' class="error"' : '';
+  
+  // Prep field values
+  $product_id_value = isset($_POST['product_id']) ? ' value="' . esc_attr($_POST['product_id']) . '"' : '';
+  $licence_email_value = isset($_POST['licence_email']) ? ' value="' . esc_attr($_POST['licence_email']) . '"' : '';
+  $licence_key_value = isset($_POST['licence_key']) ? ' value="' . esc_attr($_POST['licence_key']) . '"' : '';
+  
   // Add form HTML to buffer
   ?>
   
   <form class="course-activation-form" method="post">
-    <label>
+    <label<?php echo $product_id_error_class; ?>>
       <span class="label-text"><span class="fa fa-key left"></span> Product ID <span class="required">*</span></span>
-      <input type="text" name="product_id" value="<?php echo isset($_POST['product_id']) ? esc_attr($_POST['product_id']) : ''; ?>">
+      <input type="text" name="product_id"<?php echo $product_id_value; ?>>
     </label>
     
-    <label>
+    <label<?php echo $licence_email_error_class; ?>>
       <span class="label-text"><span class="fa fa-envelope-o left"></span> Licence Email <span class="required">*</span></span>
-      <input type="email" name="licence_email" value="<?php echo isset($_POST['licence_email']) ? esc_attr($_POST['licence_email']) : ''; ?>">
+      <input type="email" name="licence_email"<?php echo $licence_email_value; ?>>
     </label>
     
-    <label>
+    <label<?php echo $licence_key_error_class; ?>>
       <span class="label-text"><span class="fa fa-key left"></span> Licence Key <span class="required">*</span></span>
-      <input type="text" name="licence_key" value="<?php echo isset($_POST['licence_key']) ? esc_attr($_POST['licence_key']) : ''; ?>">
+      <input type="text" name="licence_key"<?php echo $licence_key_value; ?>>
     </label>
     
     <p>

@@ -28,11 +28,6 @@ require_once 'shortcode.php';
 function ldca_init() {
   global $ldca;
   
-  // Global array to hold all data for plugin
-  $ldca = array(
-    'success' => false
-  );
-  
   // Make sure form is posted to itself only
   
   // If just loading the page straight up, quit
@@ -50,11 +45,17 @@ function ldca_init() {
         ! isset($_POST['ldca_activation_wpnonce']) ||
         ! wp_verify_nonce($_POST['ldca_activation_wpnonce'], 'ldca_activation')
     ) {
-       return;
+      
+      // If unverified, quit
+      return;
     }
     
-    // Init data object and create WP error object
-    $ldca['form_errors'] = new WP_Error();
+    // Global array to hold all data for plugin
+    // Assume failure, create error obj
+    $ldca = array(
+      'success' => false,
+      'form_errors' => new WP_Error()
+    );
     
     // Run through the checks...
     if (
