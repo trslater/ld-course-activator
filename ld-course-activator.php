@@ -23,19 +23,20 @@ require_once 'shortcode.php';
 /**
  * Initiates the form validation, product activation and course access
  * 
- * @param   array        $data   contains data about the form, course & product
- * @return  true|false
+ * @return  null
  */
 function ldca_init() {
-  global $ldca_success, $ldca_form_message;
+  global $ldca;
   
-  // Form is considered incomplete by default
-  $ldca_success = false;
+  // Global array to hold all data for plugin
+  $ldca = array(
+    'success' => false
+  );
   
   // Make sure form is posted to itself only
   
-  // If no referer, no form, so quit
-  if (!isset($_SERVER['HTTP_REFERER'])) return;
+  // If just loading the page straight up, quit
+  if (! isset($_SERVER['HTTP_REFERER'])) return;
   
   // Grab referer and request URI's
   $referer = $_SERVER['HTTP_REFERER'];
@@ -53,32 +54,28 @@ function ldca_init() {
     }
     
     // Init data object and create WP error object
-    $data = array(
-      'form_errors' => new WP_Error()
-    );
+    $ldca['form_errors'] = new WP_Error();
     
     // Run through the checks...
-    if (ldca_form_ok($data)) {
-      if (ldca_course_exists($data)) {
-        if (ldca_not_user_has_access($data)) {
-          if (ldca_activate($data)) {
-            if (ldca_give_access($data)) {
-              $ldca_success = true;
-            }
-          }
-        }
-      }
+    if (
+      ldca_form_ok() &&
+      ldca_course_exists() &&
+      ldca_not_user_has_access() &&
+      ldca_activate() &&
+      ldca_give_access()
+    ) {
+      $ldca['success'] = true;
     }
     
     // After processing, produce message
     
     // Cache error messages
-    $error_messages = $data['form_errors']->get_error_messages();
+    $error_messages = $ldca['form_errors']->get_error_messages();
     
     // If there are any error messages
     if (count($error_messages) > 0) {
       
-      $ldca_form_message = array(
+      $ldca['form_message'] = array(
         'type' => 'error'
       );
       
@@ -86,27 +83,18 @@ function ldca_init() {
       if (count($error_messages) == 1) {
         
         // Produce simple message
-        $ldca_form_message['content'] = '<p>' . $error_messages[0] . '</p>';
+        $ldca['form_message']['content'] = '<p>' . $error_messages[0] . '</p>';
         
       } else {
         
         // Build complex message
-        $ldca_form_message['content'] = '<p>The following errors have occurred:</p><ul>';
+        $ldca['form_message']['content'] = '<p>The following errors have occurred:</p><ul>';
         foreach ($error_messages as $error_message) {
-          $ldca_form_message['content'] .= '<li>' . $error_message . '</li>';
+          $ldca['form_message']['content'] .= '<li>' . $error_message . '</li>';
         }
-        $ldca_form_message['content'] .= '</ul>';
+        $ldca['form_message']['content'] .= '</ul>';
       }
-      
-    // If there are no errors, check for form success
-    } else if ($ldca_success) {
-      
-      // Generate success message
-      $ldca_form_message = array(
-        'content' => '<p>Course activated successfully!</p>',
-        'type' => 'success'
-      );
-    }      
+    }  
   }
 }
 add_action('init', 'ldca_init');
@@ -119,10 +107,10 @@ add_action('init', 'ldca_init');
  * @return null
  */
 function ldca_end_form() {
-  global $ldca_success;
+  global $ldca;
   
   // If form complete
-  if ($ldca_success) {
+  if ($ldca['success']) {
     
     // Clear post data
     $_POST = array();

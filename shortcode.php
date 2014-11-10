@@ -6,7 +6,7 @@
  * @return output buffer      The html content of the form
  */
 function ldca_activation_form_cb() {
-  global $ldca_form_message, $ldca_error_fields;
+  global $ldca;
   
   // Start buffering
   ob_start();
@@ -16,7 +16,7 @@ function ldca_activation_form_cb() {
   // Check for global message var first
     
   // If no message is found
-  if (! isset($ldca_form_message['content'])) {
+  if (! isset($ldca['form_message']['content'])) {
     
     // Check query vars
     
@@ -24,7 +24,7 @@ function ldca_activation_form_cb() {
     if (! empty(get_query_var('message_content'))) {
       
       // Create global message var and add content
-      $ldca_form_message = array(
+      $ldca['form_message'] = array(
         'content' => get_query_var('message_content')
       );
       
@@ -32,7 +32,7 @@ function ldca_activation_form_cb() {
       if (! empty(get_query_var('message_type'))) {
         
         // Add it to global var as well
-        $ldca_form_message['type'] = get_query_var('message_type');
+        $ldca['form_message']['type'] = get_query_var('message_type');
       } 
     }
   }
@@ -40,14 +40,14 @@ function ldca_activation_form_cb() {
   // Check again
   
   // If found
-  if (isset($ldca_form_message['content'])) {
+  if (isset($ldca['form_message']['content'])) {
     
     // Prep optional type property
-    $message_type = isset($ldca_form_message['type']) ? ' ' . $ldca_form_message['type'] : '';
+    $message_type = isset($ldca['form_message']['type']) ? ' ' . $ldca['form_message']['type'] : '';
       
     // Add message HTML to buffer
     ?><div class="ldca-message<?php echo $message_type; ?>">
-      <?php echo $ldca_form_message['content']; ?>
+      <?php echo $ldca['form_message']['content']; ?>
     </div><?php
   }
   

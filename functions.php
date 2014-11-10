@@ -11,25 +11,24 @@
 /**
   * Validator!
   * 
-  * @param   array        $data   contains data about the form, course and product
-  * @return  true|false
+  * @return  $success     true | false
   */
-function ldca_form_ok(&$data) {
+function ldca_form_ok() {
+  global $ldca;
   
   // Assume failure
   $success = false;
   
-  // Check for necessary data
-  if (is_wp_error($data['form_errors'])) {
-    global $ldca_form_message, $ldca_field_data;
+  // Check for necessary data in global array
+  if (is_wp_error($ldca['form_errors'])) {
+    
+    // Cache for easier use
+    $form_errors = $ldca['form_errors'];
       
     // Get post data
     $product_id = isset($_POST['product_id']) ? $_POST['product_id'] : '';
     $licence_email = isset($_POST['licence_email']) ? $_POST['licence_email'] : '';
     $licence_key = isset($_POST['licence_key']) ? $_POST['licence_key'] : '';
-    
-    // Cache data
-    $form_errors = $data['form_errors'];
     
     // Validate Product ID
     
@@ -85,13 +84,13 @@ function ldca_form_ok(&$data) {
       
     }
     
-    // Add cached vars back to data
-    $data['form_errors'] = $form_errors;
+    // Add cached vars back to global var
+    $ldca['form_errors'] = $form_errors;
     
-    // Store form data for user later
-    $data['product_id'] = $product_id;
-    $data['licence_email'] = $licence_email;
-    $data['licence_key'] = $licence_key;
+    // Store form data globally
+    $ldca['product_id'] = $product_id;
+    $ldca['licence_email'] = $licence_email;
+    $ldca['licence_key'] = $licence_key;
   }
   
   return $success;
@@ -102,24 +101,23 @@ function ldca_form_ok(&$data) {
 /**
   * Looks for a course with the entered product ID
   * 
-  * @param   array        $data   contains data about the form, course & product
-  * @return  true|false
+  * @return  $success     true | false
   */
-function ldca_course_exists(&$data) {
+function ldca_course_exists() {
+  global $ldca;
   
   // Assume failure
   $success = false;
   
-  // Check for necessary data
+  // Check for necessary data in global array
   if (
-    is_wp_error($data['form_errors']) &&
-    isset($data['product_id'])
+    is_wp_error($ldca['form_errors']) &&
+    isset($ldca['product_id'])
   ) {
-    global $ldca_form_message;
     
-    // Cache data
-    $form_errors = $data['form_errors'];
-    $product_id = $data['product_id'];
+    // Cache for easier use
+    $form_errors = $ldca['form_errors'];
+    $product_id = $ldca['product_id'];
     
     // Get courses with product ID
     $courses = get_posts(array(
@@ -153,15 +151,15 @@ function ldca_course_exists(&$data) {
       } else {
         
         // Add course to data for later use
-        $data['course'] = $courses[0];
+        $ldca['course'] = $courses[0];
         
         // We did it!
         $success = true;
       }
     }
     
-    // Add chaced vars back to data
-    $data['form_errors'] = $form_errors;
+    // Store errors in globally
+    $ldca['form_errors'] = $form_errors;
   }
   
   return $success;
@@ -172,30 +170,27 @@ function ldca_course_exists(&$data) {
 /**
   * Check to see if current user DOESN'T has access to the course
   * 
-  * @param   array        $data   contains data about the form, course & product
-  * @return  true|false
+  * @return  $success     true | false
   */
-function ldca_not_user_has_access(&$data) {
+function ldca_not_user_has_access() {
+  global $ldca;
   
   // Assume failure
   $success = false;
   
-  // Check for necessary data
+  // Check for necessary data in global array
   if (
-    is_wp_error($data['form_errors']) &&
-    isset($data['course']) && is_a($data['course'], 'WP_Post')
+    is_wp_error($ldca['form_errors']) &&
+    isset($ldca['course']) && is_a($ldca['course'], 'WP_Post')
   ) {
-    global $ldca_form_message;
     
-    // Cache data
-    $form_errors = $data['form_errors'];
-    $course = $data['course'];
+    // Cache for easier use
+    $form_errors = $ldca['form_errors'];
+    $course = $ldca['course'];
     
-    // Grab course data
-    $course_data = get_post_meta($course->ID, '_sfwd-courses', true);
-    
-    // Grab and arrayize access list
-    $course_access_list = preg_split('/\s*,\s*/', $course_data['sfwd-courses_course_access_list']);
+    // Grab course meta and split access list into an array
+    $course_meta = get_post_meta($course->ID, '_sfwd-courses', true);
+    $course_access_list = preg_split('/\s*,\s*/', $course_meta['sfwd-courses_course_access_list']);
 
     // Grab current user id
     $current_user_id = get_current_user_id();
@@ -212,11 +207,8 @@ function ldca_not_user_has_access(&$data) {
       $success = true;
     }
     
-    // Add chaced vars back to data
-    $data['form_errors'] = $form_errors;
-    
-    // Store user ID for later
-    $data['current_user_id'] = $current_user_id;
+    // Store errors in globally
+    $ldca['form_errors'] = $form_errors;
   }
   
   return $success;
@@ -227,28 +219,27 @@ function ldca_not_user_has_access(&$data) {
 /**
   * Attempt to activate plugin
   * 
-  * @param   array        $data   contains data about the form, course & product
-  * @return  true|false
+  * @return  $success     true | false
   */
-function ldca_activate(&$data) {
-  global $ldca_form_message;
+function ldca_activate() {
+  global $ldca;
   
   // Assume failure
   $success = false;
   
-  // Check for necessary data
+  // Check for necessary data in global array
   if (
-    is_wp_error($data['form_errors']) &&
-    isset($data['product_id']) &&
-    isset($data['licence_email']) &&
-    isset($data['licence_key'])
+    is_wp_error($ldca['form_errors']) &&
+    isset($ldca['product_id']) &&
+    isset($ldca['licence_email']) &&
+    isset($ldca['licence_key'])
   ) {
     
-    // Cache data
-    $form_errors = $data['form_errors'];
-    $product_id = $data['product_id'];
-    $licence_email = $data['licence_email'];
-    $licence_key = $data['licence_key'];
+    // Cache ldca
+    $form_errors = $ldca['form_errors'];
+    $product_id = $ldca['product_id'];
+    $licence_email = $ldca['licence_email'];
+    $licence_key = $ldca['licence_key'];
     
     // Get store URL from settings
     $store_url = get_option('store_url');
@@ -261,7 +252,7 @@ function ldca_activate(&$data) {
     } else {
       
       // Make request to API
-      $response = ldca_request($store_url, 'activation', $data['product_id'], $data['licence_email'], $data['licence_key']);
+      $response = ldca_request($store_url, 'activation', $ldca['product_id'], $ldca['licence_email'], $ldca['licence_key']);
       
       // If response came back fine
       if (isset($response['response']['code']) && $response['response']['code'] == '200') {
@@ -272,11 +263,16 @@ function ldca_activate(&$data) {
         if ($activation_successful) {
           return true;
         } else {
+          
+          // Generate error
           $form_errors->add('activation_failed', 'Activation failed.');
           return false;
         }
       }
     }
+    
+    // Store errors in globally
+    $ldca['form_errors'] = $form_errors;
   }
 
   return $success;
@@ -286,43 +282,48 @@ function ldca_activate(&$data) {
 
 /**
  * Attempt to give current user access to course
- * @param  array        $data   contains data about the form, course & product
- * @return true|false
+ * 
+ * @return  $success     true | false
  */
-function ldca_give_access(&$data) {
-  global $ldca_form_message;
+function ldca_give_access() {
+  global $ldca;
   
   // Assume failure
   $success = false;
   
-  // Check for necessary data
+  // Check for necessary data in global array
   if (
-    is_wp_error($data['form_errors']) &&
-    isset($data['course']) && is_a($data['course'], 'WP_Post') &&
-    isset($data['current_user_id'])
+    is_wp_error($ldca['form_errors']) &&
+    isset($ldca['course']) && is_a($ldca['course'], 'WP_Post')
   ) {
-      
-    // Grab course custom fields
-    $course_data = get_post_meta($data['course']->ID, '_sfwd-courses', true);
     
-    // Grab and arrayize access list
-    $course_access_list = preg_split('/\s*,\s*/', $course_data['sfwd-courses_course_access_list']);
+    // Cache for easier use
+    $form_errors = $ldca['form_errors'];
+    $course = $ldca['course'];
+      
+    // Grab course meta and split access list into an array
+    $course_meta = get_post_meta($course->ID, '_sfwd-courses', true);
+    $course_access_list = preg_split('/\s*,\s*/', $course_meta['sfwd-courses_course_access_list']);
+    
+    // Grab current user id
+    $current_user_id = get_current_user_id();
     
     // Add current user
-    $course_access_list[] = $data['current_user_id'];
+    $course_access_list[] = $current_user_id;
     
     // Add access list back to course data
-    $course_data['sfwd-courses_course_access_list'] = implode(', ', $course_access_list);
+    $course_meta['sfwd-courses_course_access_list'] = implode(', ', $course_access_list);
     
-    // Try to write new data back to course
-    if (update_post_meta($data['course']->ID, '_sfwd-courses', $course_data)) {
+    // If we can't update course meta with new access list
+    if (! update_post_meta($ldca['course']->ID, '_sfwd-courses', $course_meta)) {
       
-      // If successful, continue...
-      return true;
+      // Generate error
+      $form_errors->add('give_access_fail', 'Could not grant access to course.');
       
     } else {
-      //ldca_display_message('Unable to give access.', 'error');
-      return false;
+      
+      // We did it!
+      $success = true;
     }
   }
   
